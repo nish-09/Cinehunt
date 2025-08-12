@@ -1,57 +1,103 @@
 'use client'
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { Movie, MovieDetails } from '@/types/movie';
+import { useQuery } from '@tanstack/react-query';
 import { movieService } from '@/lib/omdb';
 import { getImageUrl } from '@/lib/omdb';
-import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
-import { Star, ArrowLeft, Heart, Film, Calendar, Clock, Globe, Users } from 'lucide-react';
-import { useFavorites } from '@/hooks/useFavorites';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
+import { useFavorites } from '@/hooks/useFavorites';
+import { MovieDetails } from '@/types/movie';
+import { 
+  ArrowLeft, 
+  Star, 
+  Heart, 
+  Calendar, 
+  Clock, 
+  Globe, 
+  Users, 
+  Film,
+  Play,
+  BookOpen
+} from 'lucide-react';
+import Image from 'next/image';
 
 export default function MovieDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { toggleFavorite, favoriteIds } = useFavorites();
-  const [movie, setMovie] = useState<MovieDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
   const movieId = parseInt(params.id as string);
-  const isFavorite = favoriteIds.includes(movieId);
+  const { favorites, toggleFavorite } = useFavorites();
+  const [imageError, setImageError] = useState(false);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
+
+  const { data: movie, isLoading, error } = useQuery({
+    queryKey: ['movie', movieId],
+    queryFn: () => movieService.getMovieDetails(movieId),
+    enabled: !!movieId,
+  });
 
   useEffect(() => {
-    const fetchMovieDetails = async () => {
-      try {
-        setLoading(true);
-        const movieDetails = await movieService.getMovieDetails(movieId);
-        setMovie(movieDetails);
-      } catch (err) {
-        setError('Failed to load movie details');
-        console.error('Error fetching movie details:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (movieId) {
-      fetchMovieDetails();
+    if (movie?.poster_path && movie.poster_path !== 'N/A') {
+      setCurrentImageUrl(movie.poster_path);
+      setImageError(false);
+    } else {
+      setCurrentImageUrl('/placeholder.svg');
+      setImageError(true);
     }
-  }, [movieId]);
+  }, [movie?.poster_path]);
 
-  const handleBackClick = () => {
-    router.back();
-  };
+  const isFavorite = favorites.some(fav => fav.id === movieId);
 
   const handleFavoriteClick = () => {
     if (movie) {
       toggleFavorite(movie);
     }
   };
+
+  const handleImageError = () => {
+    setImageError(true);
+    setCurrentImageUrl('/placeholder.svg');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-8">
+            <LoadingSkeleton.Button className="h-10 w-24" />
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-1">
+              <div className="sticky top-24">
+                <div className="aspect-[2/3] bg-muted rounded-lg animate-pulse" />
+              </div>
+            </div>
+            
+            <div className="lg:col-span-2">
+              <LoadingSkeleton.MovieDetail />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !movie) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold text-foreground">Movie Not Found</h1>
+          <p className="text-muted-foreground">The movie you're looking for doesn't exist.</p>
+          <Button onClick={() => router.push('/')}>
+            <ArrowLeft size={20} className="mr-2" />
+            Back to Home
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const formatRating = (rating: number) => {
     if (rating === 0) return 'N/A';
@@ -65,67 +111,14 @@ export default function MovieDetailPage() {
     return 'text-red-500';
   };
 
-  if (loading) {
-    return (
-      <ProtectedRoute>
-        <div className="min-h-screen">
-          <Header />
-          <div className="container mx-auto px-4 py-8">
-            <div className="mb-8">
-              <LoadingSkeleton.Button className="h-10 w-24" />
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-1">
-                <div className="sticky top-24">
-                  <div className="aspect-[2/3] bg-muted rounded-lg animate-pulse" />
-                </div>
-              </div>
-              
-              <div className="lg:col-span-2">
-                <LoadingSkeleton.MovieDetail />
-              </div>
-            </div>
-          </div>
-        </div>
-      </ProtectedRoute>
-    );
-  }
-
-  if (error || !movie) {
-    return (
-      <ProtectedRoute>
-        <div className="min-h-screen">
-          <Header />
-          <div className="container mx-auto px-4 py-8">
-            <div className="text-center space-y-6 max-w-md mx-auto">
-              <div className="glass-card p-12 rounded-lg">
-                <Film size={64} className="mx-auto text-muted-foreground mb-6" />
-                <h1 className="text-3xl font-bold mb-4">Movie Not Found</h1>
-                <p className="text-muted-foreground mb-6">
-                  {error || 'The movie you are looking for could not be found.'}
-                </p>
-                <Button onClick={handleBackClick} size="lg">
-                  Go Back
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </ProtectedRoute>
-    );
-  }
-
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen">
-        <Header />
-        
-        <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-background">
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50">
+        <div className="container mx-auto px-4 py-4">
           <Button
             variant="ghost"
-            onClick={handleBackClick}
-            className="flex items-center space-x-2 text-muted-foreground hover:text-foreground"
+            onClick={() => router.push('/')}
+            className="flex items-center space-x-2 text-foreground hover:text-foreground hover:bg-muted/50"
           >
             <ArrowLeft size={20} />
             <span>Back</span>
@@ -137,33 +130,18 @@ export default function MovieDetailPage() {
             <div className="lg:col-span-1">
               <div className="sticky top-24">
                 <div className="relative aspect-[2/3] overflow-hidden rounded-lg shadow-2xl">
-                  {movie.poster_path && movie.poster_path !== 'N/A' ? (
-                    (() => {
-                      const imageUrl = getImageUrl(movie.poster_path);
-                      if (!imageUrl || imageUrl === '/placeholder.svg') {
-                        return (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-                            <div className="text-center">
-                              <Film size={64} className="text-muted-foreground mx-auto mb-4" />
-                              <p className="text-muted-foreground font-medium">No Poster</p>
-                            </div>
-                          </div>
-                        );
-                      }
-                      
-                      return (
-                        <Image
-                          src={imageUrl}
-                          alt={movie.title}
-                          fill
-                          sizes="(max-width: 1024px) 100vw, 33vw"
-                          className="object-cover"
-                          priority={true}
-                          quality={90}
-                          unoptimized={imageUrl.startsWith('http')}
-                        />
-                      );
-                    })()
+                  {!imageError && currentImageUrl && currentImageUrl !== '/placeholder.svg' ? (
+                    <Image
+                      src={currentImageUrl}
+                      alt={movie.title}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 33vw"
+                      className="object-cover"
+                      priority={true}
+                      quality={90}
+                      unoptimized={currentImageUrl.startsWith('http')}
+                      onError={handleImageError}
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
                       <div className="text-center">
@@ -231,104 +209,48 @@ export default function MovieDetailPage() {
                 )}
                 
                 {movie.adult && (
-                  <div className="flex items-center space-x-2 text-red-500">
+                  <div className="flex items-center space-x-2 text-muted-foreground">
                     <Users size={18} />
-                    <span>18+</span>
+                    <span>Rated R</span>
                   </div>
                 )}
               </div>
 
-              {movie.genres && movie.genres.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-foreground">Genres</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {movie.genres.map((genre) => (
-                      <span
-                        key={genre.id}
-                        className="px-3 py-1 bg-primary/20 text-primary border border-primary/30 rounded-full text-sm font-medium"
-                      >
-                        {genre.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {movie.overview && (
                 <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-foreground">Overview</h3>
+                  <h2 className="text-xl font-semibold text-foreground flex items-center space-x-2">
+                    <BookOpen size={20} />
+                    <span>Overview</span>
+                  </h2>
                   <p className="text-muted-foreground leading-relaxed text-lg">
                     {movie.overview}
                   </p>
                 </div>
               )}
 
-              {movie.cast && movie.cast.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-foreground">Cast</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {movie.cast.slice(0, 9).map((actor) => (
-                      <div key={actor.id} className="text-sm">
-                        <p className="font-medium text-foreground">{actor.name}</p>
-                        {actor.character && (
-                          <p className="text-muted-foreground text-xs">as {actor.character}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {movie.crew && movie.crew.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-foreground">Crew</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {movie.crew.slice(0, 6).map((member) => (
-                      <div key={member.id} className="text-sm">
-                        <p className="font-medium text-foreground">{member.name}</p>
-                        <p className="text-muted-foreground text-xs">{member.job}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-foreground">Additional Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  {movie.budget > 0 && (
-                    <div>
-                      <span className="text-muted-foreground">Budget: </span>
-                      <span className="text-foreground">${movie.budget.toLocaleString()}</span>
-                    </div>
-                  )}
-                  
-                  {movie.revenue > 0 && (
-                    <div>
-                      <span className="text-muted-foreground">Revenue: </span>
-                      <span className="text-foreground">${movie.revenue.toLocaleString()}</span>
-                    </div>
-                  )}
-                  
-                  {movie.status && (
-                    <div>
-                      <span className="text-muted-foreground">Status: </span>
-                      <span className="text-foreground">{movie.status}</span>
-                    </div>
-                  )}
-                  
-                  {movie.tagline && (
-                    <div className="md:col-span-2">
-                      <span className="text-muted-foreground">Tagline: </span>
-                      <span className="text-foreground italic">"{movie.tagline}"</span>
-                    </div>
-                  )}
-                </div>
+              <div className="flex flex-wrap gap-4">
+                <Button 
+                  size="lg" 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3"
+                >
+                  <Play size={20} className="mr-2" />
+                  Watch Trailer
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="px-8 py-3"
+                  onClick={handleFavoriteClick}
+                >
+                  <Heart size={20} className={`mr-2 ${isFavorite ? 'fill-current text-red-500' : ''}`} />
+                  {isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
+                </Button>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </ProtectedRoute>
+    </div>
   );
 }

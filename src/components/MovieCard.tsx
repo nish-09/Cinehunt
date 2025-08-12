@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Movie } from '@/types/movie';
-import { getImageUrl } from '@/lib/omdb';
+import { getImageUrl, isValidImageUrl } from '@/lib/omdb';
 import { Button } from '@/components/ui/button';
 import { Star, Heart, Film } from 'lucide-react';
 
@@ -18,6 +18,20 @@ export const MovieCard = ({ movie, onToggleFavorite, isFavorite = false }: Movie
   const router = useRouter();
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  useEffect(() => {
+    if (movie.poster_path && movie.poster_path !== 'N/A') {
+      setCurrentImageUrl(movie.poster_path);
+      setImageError(false);
+      setImageLoaded(false);
+    } else {
+      setCurrentImageUrl('/placeholder.svg');
+      setImageError(true);
+      setImageLoaded(true);
+    }
+  }, [movie.poster_path]);
 
   const handleClick = () => {
     router.push(`/movie/${movie.id}`);
@@ -28,25 +42,29 @@ export const MovieCard = ({ movie, onToggleFavorite, isFavorite = false }: Movie
     onToggleFavorite?.(movie);
   };
 
-  const handleImageError = () => {
-    setImageError(true);
+  const handleImageError = async () => {
+    console.log(`Image failed to load: ${currentImageUrl}`);
+    if (retryCount < 2 && currentImageUrl && currentImageUrl.startsWith('http')) {
+      setRetryCount(prev => prev + 1);
+      console.log(`Retrying image load, attempt ${retryCount + 1}`);
+      setCurrentImageUrl('/placeholder.svg');
+      setImageError(true);
+      setImageLoaded(true);
+    } else {
+      console.log('Using placeholder image after failed attempts');
+      setImageError(true);
+      setImageLoaded(true);
+    }
+  };
+
+  const handleImageLoad = () => {
+    console.log(`Image loaded successfully: ${currentImageUrl}`);
     setImageLoaded(true);
+    setImageError(false);
   };
 
   const renderPoster = () => {
-    if (imageError || !movie.poster_path || movie.poster_path === 'N/A') {
-      return (
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-          <div className="text-center">
-            <Film size={48} className="text-muted-foreground mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground font-medium">No Poster</p>
-          </div>
-        </div>
-      );
-    }
-
-    const imageUrl = getImageUrl(movie.poster_path);
-    if (!imageUrl || imageUrl === '/placeholder.svg') {
+    if (imageError || !currentImageUrl || currentImageUrl === '/placeholder.svg') {
       return (
         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
           <div className="text-center">
@@ -63,18 +81,18 @@ export const MovieCard = ({ movie, onToggleFavorite, isFavorite = false }: Movie
           <div className="absolute inset-0 bg-muted animate-pulse" />
         )}
         <Image
-          src={imageUrl}
+          src={currentImageUrl}
           alt={movie.title}
           fill
           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
           className={`object-cover transition-all duration-300 group-hover:scale-110 ${
             imageLoaded ? 'opacity-100' : 'opacity-0'
           }`}
-          onLoad={() => setImageLoaded(true)}
+          onLoad={handleImageLoad}
           onError={handleImageError}
           priority={false}
           quality={85}
-          unoptimized={imageUrl.startsWith('http')}
+          unoptimized={currentImageUrl.startsWith('http')}
         />
       </>
     );

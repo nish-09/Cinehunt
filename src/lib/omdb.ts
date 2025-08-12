@@ -22,6 +22,35 @@ export const getImageUrl = (path: string | null, size: string = 'w500') => {
   return path;
 };
 
+export const getImageUrlWithFallback = (path: string | null, size: string = 'w500') => {
+  if (!path || path === 'N/A') return '/placeholder.svg';
+  
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  
+  return path;
+};
+
+export const isValidImageUrl = async (url: string): Promise<boolean> => {
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    return response.ok;
+  } catch {
+    return false;
+  }
+};
+
+export const getSafeImageUrl = (path: string | null): string => {
+  if (!path || path === 'N/A') return '/placeholder.svg';
+  
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  
+  return '/placeholder.svg';
+};
+
 const convertOmdbToMovie = (omdbMovie: any, id: number): Movie => {
   const generateRandomRating = () => {
     return Math.round((Math.random() * 3.5 + 6.0) * 10) / 10;
