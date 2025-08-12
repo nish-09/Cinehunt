@@ -31,7 +31,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing authentication on mount
     const checkAuth = () => {
       try {
         const currentUser = getCurrentUser();

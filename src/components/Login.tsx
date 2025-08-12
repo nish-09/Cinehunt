@@ -23,7 +23,6 @@ export const Login = () => {
   const { login, register } = useAuth();
   const { theme } = useTheme();
 
-  // Load saved credentials on component mount
   useEffect(() => {
     const savedCredentials = localStorage.getItem('cine_credentials');
     if (savedCredentials) {
@@ -96,7 +95,6 @@ export const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/20">
       <div className="w-full max-w-md space-y-6">
-        {/* Demo Credentials Info */}
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center space-x-2 text-muted-foreground">
             <Info size={16} />
@@ -267,7 +265,6 @@ export const Login = () => {
           </CardFooter>
         </Card>
 
-        {/* Demo Credentials Display */}
         <div className="text-center space-y-2 p-4 bg-muted/20 rounded-lg border border-border/30">
           <h3 className="text-sm font-medium text-muted-foreground">Demo Account</h3>
           <div className="text-xs text-muted-foreground space-y-1">

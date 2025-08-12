@@ -71,20 +71,17 @@ export default function MovieDetailPage() {
         <div className="min-h-screen">
           <Header />
           <div className="container mx-auto px-4 py-8">
-            {/* Back Button Skeleton */}
             <div className="mb-8">
               <LoadingSkeleton.Button className="h-10 w-24" />
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Poster Skeleton */}
               <div className="lg:col-span-1">
                 <div className="sticky top-24">
                   <div className="aspect-[2/3] bg-muted rounded-lg animate-pulse" />
                 </div>
               </div>
               
-              {/* Content Skeleton */}
               <div className="lg:col-span-2">
                 <LoadingSkeleton.MovieDetail />
               </div>
@@ -124,7 +121,6 @@ export default function MovieDetailPage() {
       <div className="min-h-screen">
         <Header />
         
-        {/* Back Button */}
         <div className="container mx-auto px-4 py-6">
           <Button
             variant="ghost"
@@ -138,7 +134,6 @@ export default function MovieDetailPage() {
 
         <div className="container mx-auto px-4 pb-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Poster Section */}
             <div className="lg:col-span-1">
               <div className="sticky top-24">
                 <div className="relative aspect-[2/3] overflow-hidden rounded-lg shadow-2xl">
@@ -178,7 +173,6 @@ export default function MovieDetailPage() {
                     </div>
                   )}
                   
-                  {/* Favorite Button */}
                   <button
                     onClick={handleFavoriteClick}
                     className={`absolute top-4 right-4 p-3 rounded-full transition-all duration-200 ${
@@ -193,16 +187,13 @@ export default function MovieDetailPage() {
               </div>
             </div>
 
-            {/* Content Section */}
             <div className="lg:col-span-2 space-y-8">
-              {/* Title and Rating */}
               <div className="space-y-4">
                 <h1 className="text-4xl lg:text-5xl font-bold text-foreground leading-tight">
                   {movie.title}
                 </h1>
                 
                 <div className="flex items-center space-x-6">
-                  {/* Rating */}
                   <div className="flex items-center space-x-2">
                     <Star size={24} className="text-yellow-500 fill-current" />
                     <span className={`text-2xl font-bold ${getRatingColor(movie.vote_average)}`}>
@@ -217,7 +208,6 @@ export default function MovieDetailPage() {
                 </div>
               </div>
 
-              {/* Movie Info Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {movie.release_date && (
                   <div className="flex items-center space-x-2 text-muted-foreground">
@@ -248,7 +238,6 @@ export default function MovieDetailPage() {
                 )}
               </div>
 
-              {/* Genres */}
               {movie.genres && movie.genres.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-lg font-semibold text-foreground">Genres</h3>
@@ -265,7 +254,6 @@ export default function MovieDetailPage() {
                 </div>
               )}
 
-              {/* Overview */}
               {movie.overview && (
                 <div className="space-y-3">
                   <h3 className="text-lg font-semibold text-foreground">Overview</h3>
@@ -275,7 +263,6 @@ export default function MovieDetailPage() {
                 </div>
               )}
 
-              {/* Cast */}
               {movie.cast && movie.cast.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-lg font-semibold text-foreground">Cast</h3>
@@ -292,7 +279,6 @@ export default function MovieDetailPage() {
                 </div>
               )}
 
-              {/* Crew */}
               {movie.crew && movie.crew.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-lg font-semibold text-foreground">Crew</h3>
@@ -307,7 +293,6 @@ export default function MovieDetailPage() {
                 </div>
               )}
 
-              {/* Additional Info */}
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold text-foreground">Additional Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">

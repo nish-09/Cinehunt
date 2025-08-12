@@ -28,12 +28,10 @@ export const SearchBar = ({
     "genres..."
   ];
 
-  // Typing effect for placeholder
   useEffect(() => {
     const currentSearchTerm = searchTerms[placeholderIndex];
     
     if (isDeleting) {
-      // Deleting effect
       if (charIndex > 0) {
         const timer = setTimeout(() => {
           setCharIndex(charIndex - 1);
@@ -44,14 +42,12 @@ export const SearchBar = ({
         setPlaceholderIndex((prev) => (prev + 1) % searchTerms.length);
       }
     } else {
-      // Typing effect
       if (charIndex < currentSearchTerm.length) {
         const timer = setTimeout(() => {
           setCharIndex(charIndex + 1);
         }, 150);
         return () => clearTimeout(timer);
       } else {
-        // Wait before starting to delete
         const timer = setTimeout(() => {
           setIsDeleting(true);
         }, 2000);

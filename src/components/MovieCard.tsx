@@ -45,7 +45,6 @@ export const MovieCard = ({ movie, onToggleFavorite, isFavorite = false }: Movie
       );
     }
 
-    // Check if the URL is valid
     const imageUrl = getImageUrl(movie.poster_path);
     if (!imageUrl || imageUrl === '/placeholder.svg') {
       return (
@@ -75,7 +74,7 @@ export const MovieCard = ({ movie, onToggleFavorite, isFavorite = false }: Movie
           onError={handleImageError}
           priority={false}
           quality={85}
-          unoptimized={imageUrl.startsWith('http')} // Don't optimize external images
+          unoptimized={imageUrl.startsWith('http')}
         />
       </>
     );
@@ -101,7 +100,6 @@ export const MovieCard = ({ movie, onToggleFavorite, isFavorite = false }: Movie
       <div className="relative aspect-[2/3] overflow-hidden rounded-t-lg">
         {renderPoster()}
         
-        {/* Favorite button */}
         <button
           onClick={handleFavoriteClick}
           className={`absolute top-3 right-3 p-2 rounded-full transition-all duration-200 ${
@@ -113,9 +111,6 @@ export const MovieCard = ({ movie, onToggleFavorite, isFavorite = false }: Movie
           <Heart size={16} className={isFavorite ? 'fill-current' : ''} />
         </button>
 
-
-
-        {/* Year badge */}
         <div className="absolute top-3 left-3">
           <span className="px-2 py-1 bg-black/50 text-white text-xs font-medium rounded backdrop-blur-sm">
             {new Date(movie.release_date).getFullYear()}
@@ -124,12 +119,10 @@ export const MovieCard = ({ movie, onToggleFavorite, isFavorite = false }: Movie
       </div>
       
       <div className="p-4 space-y-3">
-        {/* Title */}
         <h3 className="font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors text-lg leading-tight">
           {movie.title}
         </h3>
         
-        {/* Rating and votes */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Star size={14} className="text-yellow-500 fill-current" />
@@ -144,7 +137,6 @@ export const MovieCard = ({ movie, onToggleFavorite, isFavorite = false }: Movie
           </div>
         </div>
         
-        {/* Overview */}
         {movie.overview && (
           <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
             {movie.overview}

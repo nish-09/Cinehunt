@@ -17,36 +17,19 @@ export const Movies = () => {
   const [activeTab, setActiveTab] = useState('popular');
   const { favoriteIds, toggleFavorite } = useFavorites();
 
-  // Reset search when changing tabs
   useEffect(() => {
     setSearchQuery('');
   }, [activeTab]);
 
-  // Infinite query for popular movies
-  const {
-    data: popularMoviesData,
-    fetchNextPage: fetchNextPopular,
-    hasNextPage: hasNextPopular,
-    isFetchingNextPage: isFetchingNextPopular,
-    isLoading: loadingPopular,
-    error: popularError
-  } = useInfiniteQuery({
+  const popularQuery = useInfiniteQuery({
     queryKey: ['movies', 'popular'],
     queryFn: ({ pageParam = 1 }) => movieService.getPopularMovies(pageParam),
     getNextPageParam: (lastPage) => lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
-    enabled: true, // Always enable for testing
+    enabled: true,
     initialPageParam: 1,
   });
 
-  // Infinite query for top rated movies
-  const {
-    data: topRatedMoviesData,
-    fetchNextPage: fetchNextTopRated,
-    hasNextPage: hasNextTopRated,
-    isFetchingNextPage: isFetchingTopRated,
-    isLoading: loadingTopRated,
-    error: topRatedError
-  } = useInfiniteQuery({
+  const topRatedQuery = useInfiniteQuery({
     queryKey: ['movies', 'top-rated'],
     queryFn: ({ pageParam = 1 }) => movieService.getTopRatedMovies(pageParam),
     getNextPageParam: (lastPage) => lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
@@ -54,15 +37,7 @@ export const Movies = () => {
     initialPageParam: 1,
   });
 
-  // Infinite query for now playing movies
-  const {
-    data: nowPlayingMoviesData,
-    fetchNextPage: fetchNextNowPlaying,
-    hasNextPage: hasNextNowPlaying,
-    isFetchingNextPage: isFetchingNowPlaying,
-    isLoading: loadingNowPlaying,
-    error: nowPlayingError
-  } = useInfiniteQuery({
+  const nowPlayingQuery = useInfiniteQuery({
     queryKey: ['movies', 'now-playing'],
     queryFn: ({ pageParam = 1 }) => movieService.getNowPlayingMovies(pageParam),
     getNextPageParam: (lastPage) => lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
@@ -70,15 +45,7 @@ export const Movies = () => {
     initialPageParam: 1,
   });
 
-  // Search query
-  const {
-    data: searchResultsData,
-    fetchNextPage: fetchNextSearch,
-    hasNextPage: hasNextSearch,
-    isFetchingNextPage: isFetchingNextSearch,
-    isLoading: loadingSearch,
-    error: searchError
-  } = useInfiniteQuery({
+  const searchQueryResult = useInfiniteQuery({
     queryKey: ['movies', 'search', searchQuery],
     queryFn: ({ pageParam = 1 }) => movieService.searchMovies(searchQuery, pageParam),
     getNextPageParam: (lastPage) => lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
@@ -86,70 +53,30 @@ export const Movies = () => {
     initialPageParam: 1,
   });
 
-  // Get current data based on active tab and search
-  const getCurrentData = () => {
+  const getCurrentQuery = () => {
     if (searchQuery) {
-      return {
-        data: searchResultsData,
-        fetchNextPage: fetchNextSearch,
-        hasNextPage: hasNextSearch,
-        isFetchingNextPage: isFetchingNextSearch,
-        isLoading: loadingSearch,
-        error: searchError
-      };
+      return searchQueryResult;
     }
 
     switch (activeTab) {
       case 'top-rated':
-        return {
-          data: topRatedMoviesData,
-          fetchNextPage: fetchNextTopRated,
-          hasNextPage: hasNextTopRated,
-          isFetchingNextPage: isFetchingTopRated,
-          isLoading: loadingTopRated,
-          error: topRatedError
-        };
+        return topRatedQuery;
       case 'now-playing':
-        return {
-          data: nowPlayingMoviesData,
-          fetchNextPage: fetchNextNowPlaying,
-          hasNextPage: hasNextNowPlaying,
-          isFetchingNextPage: isFetchingNowPlaying,
-          isLoading: loadingNowPlaying,
-          error: nowPlayingError
-        };
+        return nowPlayingQuery;
       default:
-        return {
-          data: popularMoviesData,
-          fetchNextPage: fetchNextPopular,
-          hasNextPage: hasNextPopular,
-          isFetchingNextPage: isFetchingNextPopular,
-          isLoading: loadingPopular,
-          error: popularError
-        };
+        return popularQuery;
     }
   };
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    error
-  } = getCurrentData();
+  const currentQuery = getCurrentQuery();
+  const movies = currentQuery.data?.pages.flatMap(page => page.results) || [];
 
-  // Flatten movies from all pages
-  const movies = data?.pages.flatMap(page => page.results) || [];
-
-  // Handle load more
   const handleLoadMore = useCallback(() => {
-    if (!isFetchingNextPage && hasNextPage) {
-      fetchNextPage();
+    if (!currentQuery.isFetchingNextPage && currentQuery.hasNextPage) {
+      currentQuery.fetchNextPage();
     }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  }, [currentQuery]);
 
-  // Auto-load more on scroll
   useEffect(() => {
     const handleScroll = () => {
       if (
@@ -164,17 +91,14 @@ export const Movies = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleLoadMore]);
 
-  // Handle search
   const handleSearch = (query: string) => {
     setSearchQuery(query);
   };
 
-  // Show loading state for initial load
-  const showInitialLoading = isLoading && !data;
+  const showInitialLoading = currentQuery.isLoading && !currentQuery.data;
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
-      {/* Header */}
       <div className="space-y-6">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -185,12 +109,10 @@ export const Movies = () => {
           </p>
         </div>
 
-        {/* Search Bar */}
         <div className="max-w-2xl mx-auto">
-          <SearchBar onSearch={handleSearch} loading={loadingSearch} />
+          <SearchBar onSearch={handleSearch} loading={currentQuery.isLoading} />
         </div>
 
-        {/* Tabs */}
         {!searchQuery && (
           <div className="flex justify-center">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full max-w-2xl">
@@ -204,13 +126,12 @@ export const Movies = () => {
         )}
       </div>
 
-      {/* Error State */}
-      {error && (
+      {currentQuery.error && (
         <div className="text-center py-12">
           <div className="glass-card p-8 rounded-lg max-w-md mx-auto">
             <h3 className="text-xl font-semibold mb-2 text-destructive">Error Loading Movies</h3>
             <p className="text-muted-foreground mb-4">
-              {error instanceof Error ? error.message : 'Something went wrong while loading movies.'}
+              {currentQuery.error instanceof Error ? currentQuery.error.message : 'Something went wrong while loading movies.'}
             </p>
             <Button onClick={() => window.location.reload()} variant="outline">
               Try Again
@@ -219,7 +140,6 @@ export const Movies = () => {
         </div>
       )}
 
-      {/* Movie Grid */}
       <div className="space-y-8">
         {showInitialLoading ? (
           <LoadingSkeleton.MovieGrid count={20} />
@@ -232,17 +152,16 @@ export const Movies = () => {
           />
         )}
 
-        {/* Load More Button */}
-        {hasNextPage && !searchQuery && !showInitialLoading && (
+        {currentQuery.hasNextPage && !searchQuery && !showInitialLoading && (
           <div className="text-center">
             <Button
               onClick={handleLoadMore}
               variant="outline"
               size="lg"
               className="glass-card"
-              disabled={isFetchingNextPage}
+              disabled={currentQuery.isFetchingNextPage}
             >
-              {isFetchingNextPage ? (
+              {currentQuery.isFetchingNextPage ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Loading More...
@@ -254,15 +173,13 @@ export const Movies = () => {
           </div>
         )}
 
-        {/* Search Results Info */}
-        {searchQuery && searchResultsData && !showInitialLoading && (
+        {searchQuery && searchQueryResult.data && !showInitialLoading && (
           <div className="text-center text-muted-foreground">
-            Found {searchResultsData.pages[0]?.total_results || 0} movie{searchResultsData.pages[0]?.total_results !== 1 ? 's' : ''} for "{searchQuery}"
+            Found {searchQueryResult.data.pages[0]?.total_results || 0} movie{searchQueryResult.data.pages[0]?.total_results !== 1 ? 's' : ''} for "{searchQuery}"
           </div>
         )}
 
-        {/* Loading More Indicator */}
-        {isFetchingNextPage && (
+        {currentQuery.isFetchingNextPage && (
           <div className="text-center py-8">
             <div className="inline-flex items-center space-x-2 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />

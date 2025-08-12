@@ -5,14 +5,14 @@ import { Header } from '@/components/Header';
 import { MovieCard } from '@/components/MovieCard';
 import { Button } from '@/components/ui/button';
 import { useFavorites } from '@/hooks/useFavorites';
-import { Movie } from '@/types/movie';
+import { Movie, MovieDetails } from '@/types/movie';
 import { movieService } from '@/lib/omdb';
 import { Film, Heart, Loader2 } from 'lucide-react';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
 
 export default function FavoritesPage() {
   const { favoriteIds, toggleFavorite } = useFavorites();
-  const [favoriteMovies, setFavoriteMovies] = useState<Movie[]>([]);
+  const [favoriteMovies, setFavoriteMovies] = useState<MovieDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,7 +27,6 @@ export default function FavoritesPage() {
         setLoading(true);
         setError(null);
         
-        // Fetch movie details for each favorite ID
         const movies = await Promise.all(
           favoriteIds.map(async (id) => {
             try {
@@ -39,8 +38,7 @@ export default function FavoritesPage() {
           })
         );
 
-        // Filter out failed fetches and set movies
-        const validMovies = movies.filter((movie): movie is Movie => movie !== null);
+        const validMovies = movies.filter((movie): movie is MovieDetails => movie !== null);
         setFavoriteMovies(validMovies);
       } catch (err) {
         setError('Failed to load favorite movies');
@@ -54,8 +52,11 @@ export default function FavoritesPage() {
   }, [favoriteIds]);
 
   const handleRemoveFavorite = (movie: Movie) => {
-    toggleFavorite(movie);
-    setFavoriteMovies(prev => prev.filter(m => m.id !== movie.id));
+    const movieDetails = favoriteMovies.find(m => m.id === movie.id);
+    if (movieDetails) {
+      toggleFavorite(movieDetails);
+      setFavoriteMovies(prev => prev.filter(m => m.id !== movie.id));
+    }
   };
 
   if (loading) {

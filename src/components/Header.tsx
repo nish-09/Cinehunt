@@ -21,7 +21,6 @@ export const Header = () => {
       const newTheme = theme === 'dark' ? 'light' : 'dark';
       setTheme(newTheme);
     } finally {
-      // Add a small delay to show the loading state
       setTimeout(() => setIsThemeChanging(false), 300);
     }
   };
@@ -39,7 +38,6 @@ export const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur-xl shadow-lg">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-        {/* Logo */}
         <div
           className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-all duration-200 hover:scale-105"
           onClick={() => router.push('/')}
@@ -58,7 +56,6 @@ export const Header = () => {
           </span>
         </div>
 
-        {/* Navigation */}
         <nav className="hidden md:flex items-center space-x-4">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -78,9 +75,7 @@ export const Header = () => {
           })}
         </nav>
 
-        {/* User menu */}
         <div className="flex items-center space-x-8">
-          {/* Theme Toggle */}
           <Button
             variant="ghost"
             size="sm"
@@ -109,7 +104,7 @@ export const Header = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleLogout}
-                className="flex items-center space-x-3 text-foreground border-border hover:bg-muted/50 h-12 px-6"
+                className="flex items-center space-x-3 text-foreground border-border hover:bg-muted/50 hover:text-foreground h-12 px-6"
               >
                 <LogOut size={18} />
                 <span className="hidden sm:inline text-base font-medium">Logout</span>
