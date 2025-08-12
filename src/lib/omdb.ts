@@ -128,7 +128,7 @@ export const movieService = {
             movieDataStore[movieId] = movie;
             return convertOmdbToMovie(movie, movieId);
           })
-          .filter(movie => movie.poster_path !== null);
+          .filter((movie: Movie) => movie.poster_path !== null);
         
         console.log('Processed movies:', movies.length);
         
@@ -165,7 +165,7 @@ export const movieService = {
           movieDataStore[movieId] = movie;
           return convertOmdbToMovie(movie, movieId);
         })
-        .filter(movie => movie.poster_path !== null);
+        .filter((movie: Movie) => movie.poster_path !== null);
       
       return {
         page,
@@ -194,9 +194,9 @@ export const movieService = {
           movieDataStore[movieId] = movie;
           return convertOmdbToMovie(movie, movieId);
         })
-        .filter(movie => movie.poster_path !== null)
-        .filter(movie => movie.vote_average >= 8.0)
-        .sort((a, b) => b.vote_average - a.vote_average);
+        .filter((movie: Movie) => movie.poster_path !== null)
+        .filter((movie: Movie) => movie.vote_average >= 8.0)
+        .sort((a: Movie, b: Movie) => b.vote_average - a.vote_average);
       
       return {
         page,
@@ -225,7 +225,7 @@ export const movieService = {
           movieDataStore[movieId] = movie;
           return convertOmdbToMovie(movie, movieId);
         })
-        .filter(movie => movie.poster_path !== null);
+        .filter((movie: Movie) => movie.poster_path !== null);
       
       return {
         page,
