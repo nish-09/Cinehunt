@@ -15,12 +15,7 @@ import { LoadingSkeleton } from './LoadingSkeleton';
 export const Movies = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('popular');
-  const { favoriteIds, toggleFavorite, isLoaded } = useFavorites();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const { favoriteIds, toggleFavorite } = useFavorites();
 
   useEffect(() => {
     setSearchQuery('');
@@ -153,7 +148,7 @@ export const Movies = () => {
             movies={movies}
             loading={false}
             onToggleFavorite={toggleFavorite}
-            favorites={isClient && isLoaded ? favoriteIds : []}
+            favorites={favoriteIds}
           />
         )}
 
