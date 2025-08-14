@@ -11,12 +11,20 @@ import { Film, Heart, Loader2 } from 'lucide-react';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
 
 export default function FavoritesPage() {
-  const { favoriteIds, toggleFavorite } = useFavorites();
+  const { favoriteIds, toggleFavorite, isLoaded } = useFavorites();
   const [favoriteMovies, setFavoriteMovies] = useState<MovieDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    // Wait for favorites to be loaded from localStorage
+    if (!isLoaded) return;
+
     const fetchFavoriteMovies = async () => {
       if (favoriteIds.length === 0) {
         setLoading(false);
@@ -49,7 +57,34 @@ export default function FavoritesPage() {
     };
 
     fetchFavoriteMovies();
-  }, [favoriteIds]);
+  }, [favoriteIds, isLoaded]);
+
+  // Don't render anything until we're on the client side
+  if (!isClient) {
+    return null;
+  }
+
+  // Show loading while favorites are being loaded from localStorage
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen">
+        <Header />
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center space-y-6 max-w-md mx-auto">
+            <div className="glass-card p-8 rounded-lg">
+              <div className="flex items-center justify-center mb-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Loading Favorites</h3>
+              <p className="text-muted-foreground">
+                Initializing your favorites...
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleRemoveFavorite = (movie: Movie) => {
     const movieDetails = favoriteMovies.find(m => m.id === movie.id);

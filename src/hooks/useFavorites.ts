@@ -7,22 +7,33 @@ const FAVORITES_KEY = 'movie_favorites';
 
 export const useFavorites = () => {
   const [favorites, setFavorites] = useState<Movie[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(FAVORITES_KEY);
-    if (stored) {
+    // Only run on client side to avoid SSR issues
+    if (typeof window !== 'undefined') {
       try {
-        setFavorites(JSON.parse(stored));
+        const stored = localStorage.getItem(FAVORITES_KEY);
+        if (stored) {
+          setFavorites(JSON.parse(stored));
+        }
       } catch (error) {
         console.error('Error parsing favorites from localStorage:', error);
         localStorage.removeItem(FAVORITES_KEY);
+      } finally {
+        setIsLoaded(true);
       }
+    } else {
+      // Mark as loaded if we're on server side
+      setIsLoaded(true);
     }
   }, []);
 
   const saveFavorites = (newFavorites: Movie[]) => {
     setFavorites(newFavorites);
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(newFavorites));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(newFavorites));
+    }
   };
 
   const addFavorite = (movie: Movie) => {
@@ -57,5 +68,6 @@ export const useFavorites = () => {
     removeFavorite,
     toggleFavorite,
     isFavorite,
+    isLoaded,
   };
 };
